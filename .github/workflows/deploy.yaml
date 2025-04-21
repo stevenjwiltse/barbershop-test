@@ -1,4 +1,4 @@
-name: Deploy Frontend and Backend Separately
+name: Deploy to EC2
 
 on:
   push:
@@ -6,53 +6,43 @@ on:
       - master
 
 jobs:
-  deploy-backend:
-    if: github.event.head_commit.message != 'skip backend'
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repo
+      - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Get last commit message
+        id: get_commit
+        run: |
+          echo "message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
 
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Copy Backend Files to EC2
+      - name: Deploy Frontend Only
+        if: contains(steps.get_commit.outputs.message, '[skip backend]')
         run: |
-          rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./barber-shop-api/ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/barbershop/barber-shop-api/
-
-      - name: Deploy Backend
-        run: |
+          echo "Frontend-only deployment triggered."
+          cd barber-shop-ui
+          npm install
+          npm run build
+          cp -r dist ../barber-shop-api/frontend-dist
+          rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./barber-shop-api/frontend-dist ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/barbershop/barber-shop-api/frontend-dist
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /home/ubuntu/barbershop/barber-shop-api
-            docker-compose down
-            docker-compose up -d --build api
+            cd ~/barbershop
+            docker-compose restart api
           EOF
 
-  deploy-frontend:
-    if: github.event.head_commit.message != 'skip frontend'
-    runs-on: ubuntu-latest
-    needs: deploy-backend
-
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-
-      - name: Copy Frontend Files to EC2
+      - name: Deploy Full Stack
+        if: "!contains(steps.get_commit.outputs.message, '[skip backend]')"
         run: |
-          rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./barber-shop-ui/ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/barbershop/barber-shop-ui/
-
-      - name: Deploy Frontend
-        run: |
+          echo "Full deployment triggered."
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /home/ubuntu/barbershop/barber-shop-ui
+            cd ~/barbershop
             docker-compose down
-            docker-compose up -d --build barber-shop-ui
+            docker-compose up -d --build
           EOF
