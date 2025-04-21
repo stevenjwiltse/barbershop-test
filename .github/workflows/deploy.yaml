@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up SSH
@@ -18,28 +18,64 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Try SSH into EC2
+      - name: Create .env on EC2
         run: |
-          ssh -tt -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} "echo Hello from EC2"
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+            mkdir -p /home/ubuntu/barbershop/barber-shop-api
+            cat > /home/ubuntu/barbershop/barber-shop-api/.env << EOL
+            VITE_KEYCLOAK_REALM=${{ secrets.VITE_KEYCLOAK_REALM }}
+            VITE_KEYCLOAK_CLIENT=${{ secrets.VITE_KEYCLOAK_CLIENT }}
+            VITE_KEYCLOAK_URL=${{ secrets.VITE_KEYCLOAK_URL }}
 
-      - name: Create .env file on EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << EOF
-            echo "MYSQL_USER=admin" > /home/ubuntu/barbershop/.env
-            echo "MYSQL_PASSWORD=password" >> /home/ubuntu/barbershop/.env
-            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> /home/ubuntu/barbershop/.env
-            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> /home/ubuntu/barbershop/.env
-            # Add any other necessary env variables...
+            MYSQL_USER=${{ secrets.MYSQL_USER }}
+            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            MYSQL_DB=${{ secrets.MYSQL_DB }}
+            MYSQL_HOST=${{ secrets.MYSQL_HOST }}
+            MYSQL_PORT=${{ secrets.MYSQL_PORT }}
+            MYSQL_ECHO=${{ secrets.MYSQL_ECHO }}
+
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            DEBUG=${{ secrets.DEBUG }}
+            BACKEND_CORS_ORIGINS=${{ secrets.BACKEND_CORS_ORIGINS }}
+
+            FRONTEND_HOST=${{ secrets.FRONTEND_HOST }}
+
+            KEYCLOAK_SERVER_URL=${{ secrets.KEYCLOAK_SERVER_URL }}
+            KEYCLOAK_REALM=${{ secrets.KEYCLOAK_REALM }}
+            KEYCLOAK_API_CLIENT_ID=${{ secrets.KEYCLOAK_API_CLIENT_ID }}
+            KEYCLOAK_FRONT_END_CLIENT_ID=${{ secrets.KEYCLOAK_FRONT_END_CLIENT_ID }}
+            KEYCLOAK_API_SECRET=${{ secrets.KEYCLOAK_API_SECRET }}
+            KEYCLOAK_FRONT_END_SECRET=${{ secrets.KEYCLOAK_FRONT_END_SECRET }}
+            KEYCLOAK_ADMIN_USERNAME=${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
+            KEYCLOAK_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+            SMTP_HOST=${{ secrets.SMTP_HOST }}
+            SMTP_PORT=${{ secrets.SMTP_PORT }}
+            SMTP_SSL=${{ secrets.SMTP_SSL }}
+            SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}
+            SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+            MAIL_FROM=${{ secrets.MAIL_FROM }}
+            MAIL_TLS=${{ secrets.MAIL_TLS }}
+            MAIL_SSL=${{ secrets.MAIL_SSL }}
+            USE_CREDENTIALS=${{ secrets.USE_CREDENTIALS }}
+
+            FAKESMTP_AUTHENTICATION_USERNAME=${{ secrets.FAKESMTP_AUTHENTICATION_USERNAME }}
+            FAKESMTP_AUTHENTICATION_PASSWORD=${{ secrets.FAKESMTP_AUTHENTICATION_PASSWORD }}
+            EOL
           EOF
 
-
-      - name: Copy Files to EC2
+      - name: Copy files to EC2
         run: |
           rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/barbershop/
 
-      - name: SSH and Deploy
+      - name: Deploy via SSH
         run: |
-          ssh -tt -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << EOF
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
             cd ~/barbershop
             docker-compose down
             docker-compose up -d --build
