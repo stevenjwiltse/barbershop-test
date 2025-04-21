@@ -1,0 +1,45 @@
+{
+  "name": "material-ui-vite-ts",
+  "private": true,
+  "version": "5.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npm i; vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "openapi-ts": "openapi-ts"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@hey-api/client-fetch": "^0.8.1",
+    "@mui/icons-material": "6.4.4",
+    "@mui/material": "^6.4.5",
+    "@mui/x-date-pickers": "7.27.3",
+    "@openapitools/openapi-generator-cli": "^2.16.3",
+    "@react-router/node": "^7.2.0",
+    "@react-router/serve": "^7.2.0",
+    "keycloak-js": "^26.1.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "7.54.2",
+    "react-oidc-context": "3.2.0",
+    "react-router": "^7.2.0"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.64.5",
+    "@react-router/dev": "^7.2.0",
+    "@types/node": "^22.13.4",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@typescript-eslint/eslint-plugin": "8.24.1",
+    "@typescript-eslint/parser": "8.24.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "9.20.1",
+    "eslint-plugin-react-hooks": "5.1.0",
+    "prettier": "3.5.1",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.1",
+    "vite-tsconfig-paths": "5.1.4"
+  }
+}

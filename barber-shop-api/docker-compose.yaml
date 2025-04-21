@@ -1,0 +1,72 @@
+services:
+  db:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: barbershop
+    ports:
+      - "3306:3306"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_ADMIN_USERNAME}
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KEYCLOAK_API_SECRET=${KEYCLOAK_API_SECRET}
+      - KEYCLOAK_FRONT_END_SECRET=${KEYCLOAK_FRONT_END_SECRET}
+    volumes:
+      - ./keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
+      - ./keycloak/themes:/opt/keycloak/providers/
+    command: ["start-dev", "--import-realm", "--spi-theme-static-max-age=-1", "--spi-theme-cache-themes=false", "--spi-theme-cache-templates=false"]
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    depends_on:
+      - db
+    ports:
+      - "8082:80"
+    environment:
+      - PMA_HOST=${MYSQL_HOST}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+
+  smtp:
+    image: gessnerfl/fake-smtp-server:latest
+    container_name: fake-smtp
+    env_file:
+      - .env
+    ports:
+      - "8125:8025"  # SMTP port
+      - "8180:8080"  # Web UI
+      - "8181:8081"  # Management API
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: barbershop-api
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    command: sh scripts/start.sh
+
+networks:
+  default:
+    name: barber-shop-network

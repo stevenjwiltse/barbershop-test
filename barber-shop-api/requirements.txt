@@ -1,0 +1,13 @@
+fastapi[standard]
+alembic
+sqlalchemy
+psycopg2-binary
+python-dotenv
+sqlmodel
+aiomysql
+cryptography
+python-keycloak
+pydantic-settings
+poetry
+authlib
+fastapi-mail
