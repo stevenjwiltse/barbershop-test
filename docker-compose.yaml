@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   db:
     image: mysql:latest
@@ -8,7 +10,7 @@ services:
     ports:
       - "3306:3306"
     env_file:
-      - .env
+      - ./barber-shop-api/.env
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -21,15 +23,15 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - .env
+      - ./barber-shop-api/.env
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_ADMIN_USERNAME}
       - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
       - KEYCLOAK_API_SECRET=${KEYCLOAK_API_SECRET}
       - KEYCLOAK_FRONT_END_SECRET=${KEYCLOAK_FRONT_END_SECRET}
     volumes:
-      - ./keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
-      - ./keycloak/themes:/opt/keycloak/providers/
+      - ./barber-shop-api/keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json
+      - ./barber-shop-api/keycloak/themes:/opt/keycloak/providers/
     command: ["start-dev", "--import-realm", "--spi-theme-static-max-age=-1", "--spi-theme-cache-themes=false", "--spi-theme-cache-templates=false"]
 
   phpmyadmin:
@@ -46,15 +48,15 @@ services:
     image: gessnerfl/fake-smtp-server:latest
     container_name: fake-smtp
     env_file:
-      - .env
+      - ./barber-shop-api/.env
     ports:
-      - "8125:8025"  # SMTP port
-      - "8180:8080"  # Web UI
-      - "8181:8081"  # Management API
+      - "8125:8025"
+      - "8180:8080"
+      - "8181:8081"
 
   api:
     build:
-      context: .
+      context: ./barber-shop-api
       dockerfile: Dockerfile
     container_name: barbershop-api
     restart: always
@@ -64,8 +66,10 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - ./barber-shop-api/.env
     command: sh scripts/start.sh
+    volumes:
+      - ./barber-shop-api:/app
 
 networks:
   default:
