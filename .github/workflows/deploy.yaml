@@ -18,6 +18,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
+      - name: Try SSH into EC2
+        run: |
+          ssh -tt -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} "echo Hello from EC2"
+
       - name: Create .env file on EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
