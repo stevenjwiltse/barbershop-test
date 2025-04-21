@@ -27,12 +27,13 @@ jobs:
         if: contains(steps.get_commit.outputs.message, '[skip backend]')
         run: |
           echo "Frontend-only deployment triggered."
+          ROOT=$(pwd)
           cd barber-shop-ui
           npm install
           npm run build
-          mkdir -p ../barber-shop-api/frontend-dist
-          cp -r dist/* ../barber-shop-api/frontend-dist/
-          rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./barber-shop-api/frontend-dist ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/barbershop/barber-shop-api/frontend-dist
+          mkdir -p $ROOT/barber-shop-api/frontend-dist
+          cp -r dist/* $ROOT/barber-shop-api/frontend-dist/
+          rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" $ROOT/barber-shop-api/frontend-dist/ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/barbershop/barber-shop-api/frontend-dist
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
             cd ~/barbershop
             docker-compose restart api
