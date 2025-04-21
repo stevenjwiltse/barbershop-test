@@ -30,7 +30,8 @@ jobs:
           cd barber-shop-ui
           npm install
           npm run build
-          cp -r dist ../barber-shop-api/frontend-dist
+          mkdir -p ../barber-shop-api/frontend-dist
+          cp -r dist/* ../barber-shop-api/frontend-dist/
           rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./barber-shop-api/frontend-dist ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/barbershop/barber-shop-api/frontend-dist
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
             cd ~/barbershop
