@@ -24,7 +24,7 @@ jobs:
 
       - name: Create .env file on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << EOF
             echo "MYSQL_USER=admin" > /home/ubuntu/barbershop/.env
             echo "MYSQL_PASSWORD=password" >> /home/ubuntu/barbershop/.env
             echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> /home/ubuntu/barbershop/.env
@@ -32,13 +32,14 @@ jobs:
             # Add any other necessary env variables...
           EOF
 
+
       - name: Copy Files to EC2
         run: |
           rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/barbershop/
 
       - name: SSH and Deploy
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -tt -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << EOF
             cd ~/barbershop
             docker-compose down
             docker-compose up -d --build
