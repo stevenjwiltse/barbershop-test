@@ -22,7 +22,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
             mkdir -p /home/ubuntu/barbershop/barber-shop-api
-            cat > /home/ubuntu/barbershop/barber-shop-api/.env << EOL
+            cat << 'EOL' > /home/ubuntu/barbershop/barber-shop-api/.env
             VITE_KEYCLOAK_REALM=${{ secrets.VITE_KEYCLOAK_REALM }}
             VITE_KEYCLOAK_CLIENT=${{ secrets.VITE_KEYCLOAK_CLIENT }}
             VITE_KEYCLOAK_URL=${{ secrets.VITE_KEYCLOAK_URL }}
